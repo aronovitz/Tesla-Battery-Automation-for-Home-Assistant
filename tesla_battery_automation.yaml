@@ -1,0 +1,70 @@
+alias: Tesla PowerWall charging automation
+description: ""
+triggers:
+  - trigger: time
+    at: "11:00:00"
+    id: early_charge_start
+  - trigger: time
+    at: "13:00:00"
+    id: late_charge_start
+  - trigger: numeric_state
+    entity_id:
+      - sensor.my_house_percentage_charged
+    below: 10
+    id: low_battery
+conditions: []
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id:
+              - early_charge_start
+          - condition: template
+            value_template: "{{ now().month in [11, 12, 1, 2, 3] }}"
+            alias: Check if winter months (Nov - Mar)
+        sequence:
+          - action: script.charge_powerwall_battery_low_solar_generation_routine
+            metadata: {}
+            data: {}
+        alias: Winter PowerWall batter charge routine
+      - conditions:
+          - condition: trigger
+            id:
+              - late_charge_start
+          - condition: template
+            value_template: "{{ now().month in [4, 5, 6, 7, 8, 9, 10] }}"
+            alias: Check if summer months (Apr - Oct)
+        sequence:
+          - alias: Check forecasted solar production
+            if:
+              - condition: numeric_state
+                entity_id: sensor.solcast_pv_forecast_forecast_today
+                above: 35
+            then:
+              - action: >-
+                  script.charge_powerwall_battery_high_solar_generation_routine_summer
+                metadata: {}
+                data: {}
+            else:
+              - action: script.charge_powerwall_battery_low_solar_generation_routine
+                metadata: {}
+                data: {}
+        alias: Summer PowerWall batter charge routine
+      - conditions:
+          - condition: trigger
+            id:
+              - low_battery
+        sequence:
+          - action: select.select_option
+            metadata: {}
+            target:
+              entity_id: select.my_house_operation_mode
+            data:
+              option: autonomous
+          - action: switch.turn_on
+            metadata: {}
+            target:
+              entity_id: switch.my_house_allow_charging_from_grid
+            data: {}
+        alias: Draw from grid during off peak if battery hits lower threshold charge
+mode: single

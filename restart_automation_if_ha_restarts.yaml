@@ -1,0 +1,86 @@
+alias: Resume PowerWall charge automation if HA restarts
+description: ""
+triggers:
+  - trigger: homeassistant
+    event: start
+conditions: []
+actions:
+  - choose:
+
+      # Restarted during peak hours or early morning (3pm-11am) - set self consumption
+      - conditions:
+          - condition: time
+            after: "15:00:00"
+            before: "11:00:00"
+        sequence:
+          - action: select.select_option
+            target:
+              entity_id: select.my_house_operation_mode
+            data:
+              option: self_consumption
+          - action: number.set_value
+            target:
+              entity_id: number.my_house_backup_reserve
+            data:
+              value: "10"
+          - action: switch.turn_off
+            target:
+              entity_id: switch.my_house_allow_charging_from_grid
+          - action: select.select_option
+            target:
+              entity_id: select.my_house_allow_export
+            data:
+              option: pv_only
+
+      # Restarted during winter fast-charge window (2pm-3pm)
+      - conditions:
+          - condition: time
+            after: "14:00:00"
+            before: "15:00:00"
+          - condition: template
+            value_template: "{{ now().month in [11, 12, 1, 2, 3] }}"
+        sequence:
+          - action: select.select_option
+            target:
+              entity_id: select.my_house_operation_mode
+            data:
+              option: backup
+          - action: number.set_value
+            target:
+              entity_id: number.my_house_backup_reserve
+            data:
+              value: "100"
+          - action: switch.turn_on
+            target:
+              entity_id: switch.my_house_allow_charging_from_grid
+
+      # Restarted during winter slow-charge window (11am-2pm)
+      - conditions:
+          - condition: time
+            after: "11:00:00"
+            before: "14:00:00"
+          - condition: template
+            value_template: "{{ now().month in [11, 12, 1, 2, 3] }}"
+        sequence:
+          - action: script.charge_powerwall_battery_low_solar_generation_routine
+            data: {}
+
+      # Restarted during summer charging window (1pm-3pm)
+      - conditions:
+          - condition: time
+            after: "13:00:00"
+            before: "15:00:00"
+          - condition: template
+            value_template: "{{ now().month in [4, 5, 6, 7, 8, 9, 10] }}"
+        sequence:
+          - if:
+              - condition: numeric_state
+                entity_id: sensor.solcast_pv_forecast_forecast_today
+                above: 35
+            then:
+              - action: script.charge_powerwall_battery_high_solar_generation_routine_summer
+                data: {}
+            else:
+              - action: script.charge_powerwall_battery_low_solar_generation_routine
+                data: {}
+mode: single

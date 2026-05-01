@@ -1,0 +1,44 @@
+alias: Disable Tesla PowerWall charging automation if storm watch is 'on'
+description: ""
+triggers:
+  - trigger: state
+    entity_id:
+      - binary_sensor.my_house_storm_watch_active
+    to:
+      - "on"
+    id: storm
+  - trigger: state
+    entity_id:
+      - binary_sensor.my_house_storm_watch_active
+    to:
+      - "off"
+    id: no_storm
+conditions: []
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id:
+              - storm
+        sequence:
+          - action: automation.turn_off
+            metadata: {}
+            target:
+              entity_id: automation.tesla_powerwall_charging
+            data:
+              stop_actions: true
+      - conditions:
+          - condition: trigger
+            id:
+              - no_storm
+          - condition: state
+            entity_id: automation.tesla_powerwall_charging
+            state:
+              - "off"
+        sequence:
+          - action: automation.turn_on
+            metadata: {}
+            target:
+              entity_id: automation.tesla_powerwall_charging
+            data: {}
+mode: single

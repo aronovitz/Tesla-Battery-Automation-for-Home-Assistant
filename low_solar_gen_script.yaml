@@ -1,0 +1,63 @@
+sequence:
+  - action: select.select_option
+    metadata: {}
+    target:
+      entity_id: select.my_house_operation_mode
+    data:
+      option: autonomous
+  - action: number.set_value
+    metadata: {}
+    target:
+      entity_id: number.my_house_backup_reserve
+    data:
+      value: "80"
+  - action: switch.turn_on
+    metadata: {}
+    target:
+      entity_id: switch.my_house_allow_charging_from_grid
+    data: {}
+  - action: select.select_option
+    metadata: {}
+    target:
+      entity_id: select.my_house_allow_export
+    data:
+      option: pv_only
+  - wait_for_trigger:
+      - trigger: time
+        at: "14:00:00"
+    alias: At 2:00pm start fast charging to top off battery
+  - action: select.select_option
+    metadata: {}
+    target:
+      entity_id: select.my_house_operation_mode
+    data:
+      option: backup
+  - action: number.set_value
+    metadata: {}
+    target:
+      entity_id: number.my_house_backup_reserve
+    data:
+      value: "100"
+  - wait_for_trigger:
+      - trigger: time
+        at: "15:00:00"
+    alias: At 3:00pm set operating mode to self-power and 10% back-up reserve
+  - action: select.select_option
+    metadata: {}
+    target:
+      entity_id: select.my_house_operation_mode
+    data:
+      option: self_consumption
+  - action: number.set_value
+    metadata: {}
+    target:
+      entity_id: number.my_house_backup_reserve
+    data:
+      value: "10"
+  - action: switch.turn_off
+    metadata: {}
+    target:
+      entity_id: switch.my_house_allow_charging_from_grid
+    data: {}
+alias: Charge PowerWall battery - low solar generation routine
+description: ""
