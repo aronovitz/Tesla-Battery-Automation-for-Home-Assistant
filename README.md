@@ -13,7 +13,7 @@ A few notes about my setup and approach:
 
 # What Is Included
 
-The follow files are include in this repo:
+The following files are include in this repo:
 * **tesla_battery_automation.yaml** - primary automation file for configurating the *system operating mode*, *back-up reserve* and *charge from grid* settings during the winter and summer, as well as adjusting the system settings when the battery charge drops to a threshdold amount.
 * **high_solar_gen_script.yaml** - script that defines the actions to run / settings to adjust during high solar production time period (summer.)
 * **low_solar_gen_script.yaml** - script that defines the actions to run / settings to adjust durign low solar production time period (winter or cloudy/bad weather days.)
