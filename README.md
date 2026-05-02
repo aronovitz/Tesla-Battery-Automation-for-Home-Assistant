@@ -17,5 +17,5 @@ The follow files are include in this repo:
 * **tesla_battery_automation.yaml** - primary automation file for configurating the *system operating mode*, *back-up reserve* and *charge from grid* settings during the winter and summer, as well as adjusting the system settings when the battery charge drops to a threshdold amount.
 * **high_solar_gen_script.yaml** - script that defines the actions to run / settings to adjust during high solar production time period (summer.)
 * **low_solar_gen_script.yaml** - script that defines the actions to run / settings to adjust durign low solar production time period (winter or cloudy/bad weather days.)
-* **restart_automation_if_ha_restarts.yaml** - this automation resets the proper battery settings or restarts the charging automation if Home Assistant restarts, which may interrupt the 'telsa_battery_automation', which can run for a long time (>1 hour.)
+* **restart_automation_if_ha_restarts.yaml** - this automation resets the proper battery settings or restarts the charging automation if Home Assistant restarts, interrupting the 'telsa_battery_automation', which can run for a long time (>1 hour.)
 * **storm_watch_toggle.yaml** - automation that disables the 'tesla_battery_automation' routine if the Telsa Storm Watch setting is turned on, allowing the Storm Watch settings to override.
