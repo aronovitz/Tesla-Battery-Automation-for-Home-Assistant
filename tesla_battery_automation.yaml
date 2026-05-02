@@ -1,5 +1,6 @@
 alias: Tesla PowerWall charging automation
-description: ""
+description: "Automations to optimize charging Tesla PowerWall battery and avoid
+  importing power during peak utility pricing period."
 triggers:
   - trigger: time
     at: "11:00:00"

@@ -1,3 +1,5 @@
+# script that defines the actions to run / settings to adjust durign 
+# low solar production time period (typically winter.)
 sequence:
   - action: select.select_option
     metadata: {}

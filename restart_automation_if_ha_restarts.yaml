@@ -1,3 +1,5 @@
+# This automation resets the proper battery settings or restarts the charging automation if 
+# Home Assistant restarts, potentially interrupting the initial charging automation routine.
 alias: Resume PowerWall charge automation if HA restarts
 description: ""
 triggers:

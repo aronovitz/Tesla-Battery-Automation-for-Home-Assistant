@@ -1,3 +1,5 @@
+# script that defines the actions to run / settings to adjust during
+# high solar production time period (typically summer.)
 sequence:
   - action: select.select_option
     metadata: {}

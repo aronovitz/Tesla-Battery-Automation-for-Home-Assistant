@@ -1,3 +1,5 @@
+# automation that disables the battery charging automation routine if the Tesla
+# Storm Watch setting is turned on, allowing the Storm Watch settings to override.
 alias: Disable Tesla PowerWall charging automation if storm watch is 'on'
 description: ""
 triggers:
