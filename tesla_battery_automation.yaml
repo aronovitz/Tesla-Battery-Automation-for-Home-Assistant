@@ -4,10 +4,16 @@ description: "Automations to optimize charging Tesla PowerWall battery and avoid
 triggers:
   - trigger: time
     at: "11:00:00"
-    id: early_charge_start
+    id: low_gen_charge_start
   - trigger: time
     at: "13:00:00"
-    id: late_charge_start
+    id: high_gen_charge_start
+  - trigger: time
+    at: "14:00:00"
+    id: low_gen_battery_top_off
+  - trigger: time
+    at: "15:00:00"
+    id: return_to_self_consumption
   - trigger: numeric_state
     entity_id:
       - sensor.my_house_percentage_charged
@@ -19,38 +25,110 @@ actions:
       - conditions:
           - condition: trigger
             id:
-              - early_charge_start
-          - condition: template
-            value_template: "{{ now().month in [11, 12, 1, 2, 3] }}"
-            alias: Check if winter months (Nov - Mar)
+              - low_gen_charge_start
+          - condition: numeric_state
+            entity_id: sensor.solcast_pv_forecast_forecast_today
+            below: 25
         sequence:
-          - action: script.charge_powerwall_battery_low_solar_generation_routine
+          - action: select.select_option
             metadata: {}
+            target:
+              entity_id: select.my_house_operation_mode
+            data:
+              option: autonomous
+          - action: number.set_value
+            metadata: {}
+            target:
+              entity_id: number.my_house_backup_reserve
+            data:
+              value: "80"
+          - action: switch.turn_on
+            metadata: {}
+            target:
+              entity_id: switch.my_house_allow_charging_from_grid
             data: {}
-        alias: Winter PowerWall batter charge routine
+        alias: Low solar generation battery charge start
       - conditions:
           - condition: trigger
             id:
-              - late_charge_start
-          - condition: template
-            value_template: "{{ now().month in [4, 5, 6, 7, 8, 9, 10] }}"
-            alias: Check if summer months (Apr - Oct)
+              - high_gen_charge_start
+          - condition: numeric_state
+            entity_id: sensor.solcast_pv_forecast_forecast_today
+            above: 24.99
         sequence:
-          - alias: Check forecasted solar production
-            if:
-              - condition: numeric_state
-                entity_id: sensor.solcast_pv_forecast_forecast_today
-                above: 35
-            then:
-              - action: >-
-                  script.charge_powerwall_battery_high_solar_generation_routine_summer
-                metadata: {}
-                data: {}
-            else:
-              - action: script.charge_powerwall_battery_low_solar_generation_routine
-                metadata: {}
-                data: {}
-        alias: Summer PowerWall batter charge routine
+          - action: select.select_option
+            metadata: {}
+            target:
+              entity_id: select.my_house_operation_mode
+            data:
+              option: autonomous
+          - action: number.set_value
+            metadata: {}
+            target:
+              entity_id: number.my_house_backup_reserve
+            data:
+              value: "70"
+          - action: switch.turn_on
+            metadata: {}
+            target:
+              entity_id: switch.my_house_allow_charging_from_grid
+            data: {}
+        alias: High solar generation battery charge start
+      - conditions:
+          - condition: trigger
+            id:
+              - low_gen_battery_top_off
+          - condition: numeric_state
+            entity_id: sensor.solcast_pv_forecast_forecast_today
+            below: 25
+        sequence:
+          - action: select.select_option
+            metadata: {}
+            target:
+              entity_id: select.my_house_operation_mode
+            data:
+              option: backup
+          - action: number.set_value
+            metadata: {}
+            target:
+              entity_id: number.my_house_backup_reserve
+            data:
+              value: "100"
+          - action: switch.turn_on
+            metadata: {}
+            target:
+              entity_id: switch.my_house_allow_charging_from_grid
+            data: {}
+        alias: Low solar generation battery charge top off
+      - conditions:
+          - condition: trigger
+            id:
+              - return_to_self_consumption
+        sequence:
+          - action: select.select_option
+            metadata: {}
+            target:
+              entity_id: select.my_house_operation_mode
+            data:
+              option: self_consumption
+          - action: number.set_value
+            metadata: {}
+            target:
+              entity_id: number.my_house_backup_reserve
+            data:
+              value: "10"
+          - action: switch.turn_off
+            metadata: {}
+            target:
+              entity_id: switch.my_house_allow_charging_from_grid
+            data: {}
+          - action: select.select_option
+            metadata: {}
+            target:
+              entity_id: select.my_house_allow_export
+            data:
+              option: pv_only
+        alias: Return to self-consumption mode
       - conditions:
           - condition: trigger
             id:
@@ -62,10 +140,5 @@ actions:
               entity_id: select.my_house_operation_mode
             data:
               option: autonomous
-          - action: switch.turn_on
-            metadata: {}
-            target:
-              entity_id: switch.my_house_allow_charging_from_grid
-            data: {}
-        alias: Draw from grid during off peak if battery hits lower threshold charge
+        alias: Draw from grid if battery hits lower charge percentage threshold
 mode: single
